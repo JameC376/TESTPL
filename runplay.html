@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎥 Shaka Player UI</title>
+  <title>🎥 Shaka Player UI - เล่นได้จริง</title>
 
   <!-- CSS ของ Shaka UI -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@4.7.10/dist/controls.min.css">
@@ -11,19 +11,23 @@
     body {
       margin: 0;
       background: #121212;
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      font-family: sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
+    }
+
+    h2 {
+      margin-top: 20px;
+      color: #00ffcc;
     }
 
     #video-container {
       width: 95vw;
       max-width: 960px;
       aspect-ratio: 16 / 9;
-      margin-top: 20px;
-      background-color: black;
+      background: black;
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
@@ -36,32 +40,27 @@
   </style>
 </head>
 <body>
-  <h2 style="color:#00ffcc;">🎬 ตัวเล่นวิดีโอ Shaka UI</h2>
+  <h2>🎬 ตัวเล่นวิดีโอด้วย Shaka UI (แก้แล้ว)</h2>
 
-  <div id="video-container">
+  <div id="video-container" data-shaka-player>
     <video autoplay muted playsinline></video>
-    <div class="shaka-controls-container" data-shaka-player-container></div>
   </div>
 
   <!-- JS ของ Shaka Player -->
   <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.7.10/dist/shaka-player.ui.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const videoContainer = document.getElementById('video-container');
+    document.addEventListener('shaka-ui-loaded', () => {
       const manifestUri = "https://livecdn.euw1-0005.jwplive.com/live/sites/fM9jRrkn/media/MlzCqA5F/live.isml/.m3u8";
 
-      const ui = shaka.ui.Overlay.make(videoContainer.querySelector("video"), videoContainer, {});
+      const videoContainer = document.querySelector('#video-container');
+      const video = videoContainer.querySelector('video');
+      const ui = videoContainer['ui'];
       const player = ui.getPlayer();
 
-      if (!shaka.Player.isBrowserSupported()) {
-        alert("เบราว์เซอร์ไม่รองรับ Shaka Player");
-        return;
-      }
-
       player.load(manifestUri).then(() => {
-        console.log("✅ โหลดวิดีโอสำเร็จ");
-      }).catch(error => {
-        console.error("❌ โหลดวิดีโอล้มเหลว", error);
+        console.log('✅ โหลดวิดีโอสำเร็จ');
+      }).catch(e => {
+        console.error('❌ โหลดไม่สำเร็จ', e);
         alert("ไม่สามารถโหลดวิดีโอได้");
       });
     });
