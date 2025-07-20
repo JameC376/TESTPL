@@ -1,90 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>One31 with Shaka Player</title>
-  <style>
-    :root {
-      --shaka-player-controls-background: rgba(0, 0, 0, 0.7);
-      --shaka-player-controls-color: #f0f0f0;
-      --shaka-player-controls-hover-color: #ffffff;
-    }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>One31 Live Stream</title>
+  
+  <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/4.4.1/shaka-player.ui.js"></script>
+  <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/shaka-player/4.4.1/controls.css">
 
+  <style>
+    /* ตั้งค่า CSS เพื่อให้ video ปรับขนาดอัตโนมัติ */
     body {
-      background-color: #1a1a1a;
-      color: #e0e0e0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #000;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-
-    .video-container {
-      width: 100%;
-      max-width: 960px;
-      background-color: #000;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-      border-radius: 8px;
+      height: 100vh;
+      width: 100vw;
       overflow: hidden;
     }
 
-    .video-title {
-      background: #2c2c2c;
-      color: #fff;
-      padding: 15px;
-      text-align: center;
-      font-size: 1.5rem;
-      margin: 0;
+    #video-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* กำหนดสัดส่วน 16:9 ถ้าต้องการ */
+      /* max-width: 100vw; */
+      /* max-height: 100vh; */
+      /* aspect-ratio: 16 / 9; */
     }
 
     video {
       width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    .shaka-spinner {
-      border-color: #ffffff !important;
-      border-top-color: transparent !important;
+      height: 100%;
+      object-fit: contain; /* ทำให้ video แสดงเต็มพื้นที่โดยไม่ถูกตัดและคงสัดส่วนเดิม */
     }
   </style>
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.11/controls.min.css">
 </head>
 <body>
 
-<div class="video-container">
-  <h1 class="video-title">ช่อง One31</h1>
-  <video id="video" poster="//shaka-player-demo.appspot.com/assets/poster.jpg" controls></video>
-</div>
+  <div id="video-container" data-shaka-player-container>
+    <video id="video" autoplay controls data-shaka-player></video>
+  </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.11/shaka-player.compiled.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.11/shaka-player.ui.js"></script>
+  <script>
+    // ตั้งค่า URL ของช่อง One31
+    const manifestUri = 'https://bcovlive-a.akamaihd.net/b6603a14ea59440a95e9235e14bc9332/ap-southeast-1/6415628290001/9c3d7fc7d10840a69e48b5939ae886e0/playlist_ssaiM.m3u8';
 
-<script>
-  const manifestUri = 'https://bcovlive-a.akamaihd.net/b6603a14ea59440a95e9235e14bc9332/ap-southeast-1/6415628290001/9c3d7fc7d10840a69e48b5939ae886e0/playlist_ssaiM.m3u8';
+    async function init() {
+      // ตรวจสอบว่าเบราว์เซอร์รองรับ Shaka Player หรือไม่
+      if (shaka.Player.is || shaka.Player.is == undefined) {
+        // สร้างอ็อบเจกต์ Player และผูกกับองค์ประกอบ video
+        const video = document.getElementById('video');
+        const player = new shaka.Player(video);
 
-  async function initPlayer() {
-    const video = document.getElementById('video');
-    const ui = video['ui'];
-    const controls = ui.getControls();
-    const player = controls.getPlayer();
+        // ตั้งค่าตัวจัดการเหตุการณ์สำหรับข้อผิดพลาด
+        player.addEventListener('error', onErrorEvent);
 
-    try {
-      await player.load(manifestUri);
-      console.log('The video has been loaded!');
-    } catch (error) {
-      console.error('Error code', error.code, 'object', error);
+        // พยายามโหลดไฟล์ M3U8
+        try {
+          await player.load(manifestUri);
+          console.log('The video has been successfully loaded!');
+        } catch (error) {
+          onError(error);
+        }
+      }
     }
-  }
 
-  document.addEventListener('DOMContentLoaded', initPlayer);
-</script>
+    // ฟังก์ชันจัดการข้อผิดพลาด
+    function onErrorEvent(event) {
+      // สร้าง Shaka Player error object จาก event
+      onError(event.detail);
+    }
+
+    function onError(error) {
+      console.error('Error code', error.code, 'object', error);
+      alert('ไม่สามารถเล่นวิดีโอได้: ' + error.message);
+    }
+
+    // เริ่มต้นกระบวนการเมื่อหน้าเว็บพร้อม
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
 
 </body>
 </html>
