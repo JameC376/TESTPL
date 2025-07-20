@@ -2,121 +2,68 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🎥 ตัวเล่นวิดีโอ - Shaka</title>
-  <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.7.10/dist/shaka-player.compiled.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎥 Shaka Player UI</title>
+
+  <!-- CSS ของ Shaka UI -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@4.7.10/dist/controls.min.css">
   <style>
     body {
       margin: 0;
-      padding: 0;
-      background-color: #121212;
-      color: #ffffff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
-    h2 {
-      margin-top: 20px;
-      text-align: center;
-      color: #00ffcc;
-    }
-
     #video-container {
-      position: relative;
       width: 95vw;
       max-width: 960px;
       aspect-ratio: 16 / 9;
-      background: #000;
-      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+      margin-top: 20px;
+      background-color: black;
       border-radius: 10px;
       overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
     }
 
     video {
       width: 100%;
       height: 100%;
-      border-radius: 10px;
-    }
-
-    #controls {
-      margin-top: 15px;
-      text-align: center;
-    }
-
-    select {
-      padding: 8px 12px;
-      font-size: 16px;
-      background: #1e1e1e;
-      color: #00ffcc;
-      border: 1px solid #00ffcc;
-      border-radius: 6px;
-    }
-
-    select:focus {
-      outline: none;
-      border-color: #33ffcc;
     }
   </style>
 </head>
 <body>
-  <h2>🎬 ตัวเล่นวิดีโอ Shaka + เลือกความชัด</h2>
+  <h2 style="color:#00ffcc;">🎬 ตัวเล่นวิดีโอ Shaka UI</h2>
 
   <div id="video-container">
-    <video id="video" controls autoplay muted></video>
+    <video autoplay muted playsinline></video>
+    <div class="shaka-controls-container" data-shaka-player-container></div>
   </div>
 
-  <div id="controls">
-    <label for="quality">🛠 เลือกความชัด:</label>
-    <select id="quality">
-      <option>กำลังโหลด...</option>
-    </select>
-  </div>
-
+  <!-- JS ของ Shaka Player -->
+  <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.7.10/dist/shaka-player.ui.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const video = document.getElementById('video');
-      const qualitySelect = document.getElementById('quality');
+    document.addEventListener('DOMContentLoaded', () => {
+      const videoContainer = document.getElementById('video-container');
       const manifestUri = "https://livecdn.euw1-0005.jwplive.com/live/sites/fM9jRrkn/media/MlzCqA5F/live.isml/.m3u8";
+
+      const ui = shaka.ui.Overlay.make(videoContainer.querySelector("video"), videoContainer, {});
+      const player = ui.getPlayer();
 
       if (!shaka.Player.isBrowserSupported()) {
         alert("เบราว์เซอร์ไม่รองรับ Shaka Player");
         return;
       }
 
-      const player = new shaka.Player(video);
-      window.player = player;
-
-      try {
-        await player.load(manifestUri);
-        console.log("🎉 โหลดสำเร็จ");
-
-        const tracks = player.getVariantTracks();
-        qualitySelect.innerHTML = '<option value="auto">Auto (อัตโนมัติ)</option>';
-
-        tracks.forEach(track => {
-          const option = document.createElement('option');
-          option.value = track.id;
-          option.text = `${track.height}p (${Math.round(track.bandwidth / 1000)} kbps)`;
-          qualitySelect.appendChild(option);
-        });
-
-        qualitySelect.addEventListener('change', () => {
-          const selected = qualitySelect.value;
-          if (selected === 'auto') {
-            player.configure({ abr: { enabled: true } });
-          } else {
-            player.configure({ abr: { enabled: false } });
-            const chosen = tracks.find(t => t.id == selected);
-            if (chosen) player.selectVariantTrack(chosen, true);
-          }
-        });
-
-      } catch (e) {
-        console.error("❌ โหลดไม่สำเร็จ", e);
-        alert("เกิดข้อผิดพลาด: ไม่สามารถโหลดวิดีโอได้");
-      }
+      player.load(manifestUri).then(() => {
+        console.log("✅ โหลดวิดีโอสำเร็จ");
+      }).catch(error => {
+        console.error("❌ โหลดวิดีโอล้มเหลว", error);
+        alert("ไม่สามารถโหลดวิดีโอได้");
+      });
     });
   </script>
 </body>
