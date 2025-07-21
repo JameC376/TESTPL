@@ -1,14 +1,9 @@
-<?php
-$html = file_get_contents('https://halu.serv00.net/poli.php');
-
-preg_match_all('/<a[^>]+href="([^"]+\.m3u8)"[^>]*>.*?<img[^>]+src="([^"]+)"[^>]*>.*?([^<]+)<\/a>/is', $html, $matches, PREG_SET_ORDER);
-?>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>ทดสอบสตรีม</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>รายการสตรีม</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -31,7 +26,7 @@ preg_match_all('/<a[^>]+href="([^"]+\.m3u8)"[^>]*>.*?<img[^>]+src="([^"]+)"[^>]*
         video {
             width: 100%;
             border-radius: 8px;
-            display: none; 
+            display: none;
         }
         h2 {
             text-align: center;
@@ -44,7 +39,7 @@ preg_match_all('/<a[^>]+href="([^"]+\.m3u8)"[^>]*>.*?<img[^>]+src="([^"]+)"[^>]*
             max-width: 1200px;
         }
         .card {
-            flex: 0 1 200px; 
+            flex: 0 1 200px;
             background: #34495e;
             padding: 10px;
             border-radius: 10px;
@@ -69,45 +64,65 @@ preg_match_all('/<a[^>]+href="([^"]+\.m3u8)"[^>]*>.*?<img[^>]+src="([^"]+)"[^>]*
         #video-heading {
             text-align: center;
             margin-bottom: 10px;
-            display: none; 
+            display: none;
         }
     </style>
 </head>
 <body>
 
 <div class="video-container">
-    <h2 id="video-heading">กำลังเล่น</h2>
-    <h2 id="video-heading"> <class="card-title"> </h2>
+    <h2 id="video-heading"></h2>
     <video id="video" controls></video>
 </div>
 
-<h2>เลือกวิดีโอเพื่อเล่น</h2>
+<h2>เลือกช่องเพื่อรับชม</h2>
 <div class="container">
-<div class="card" onclick="playVideo('https://bcovlive-a.akamaihd.net/b6603a14ea59440a95e9235e14bc9332/ap-southeast-1/6415628290001/9c3d7fc7d10840a69e48b5939ae886e0/playlist_ssaiM.m3u8')">
+    <div class="card" onclick="playVideo('https://bcovlive-a.akamaihd.net/b6603a14ea59440a95e9235e14bc9332/ap-southeast-1/6415628290001/9c3d7fc7d10840a69e48b5939ae886e0/playlist_ssaiM.m3u8', 'ช่อง one31')">
         <img src="https://assets.oned.net/3/be/7e/be7edac0-e9b2-4555-b671-8104c5ba5270" alt="ช่อง one31">
         <div class="card-title">ช่อง one31</div>
     </div>
 
-    <div class="card" onclick="playVideo('https://bcovlive-a.akamaihd.net/57d4bf695e80436d9335f4f50adbe438/ap-southeast-1/6415628290001/7e85dc4a59904e45b4fdffebd62e1d82/playlist_ssaiM.m3u8')">
+    <div class="card" onclick="playVideo('https://bcovlive-a.akamaihd.net/57d4bf695e80436d9335f4f50adbe438/ap-southeast-1/6415628290001/7e85dc4a59904e45b4fdffebd62e1d82/playlist_ssaiM.m3u8', 'ช่อง GMM25')">
         <img src="https://cms.dmpcdn.com/livetv/2020/11/19/ed873d50-2a22-11eb-bed4-0972e345f90c_320.png" alt="ช่อง GMM25">
         <div class="card-title">ช่อง GMM25</div>
     </div>
-
-<?php foreach ($matches as $match): ?>
-    <div class="card" onclick="playVideo('<?php echo $match[1]; ?>')">
-        <img src="<?php echo htmlspecialchars($match[2]); ?>" alt="">
-        <div class="card-title"><?php echo htmlspecialchars(trim($match[3])); ?></div>
+    
+    <div class="card" onclick="playVideo('https://bcovlive-a.akamaihd.net/6055106547001/6055106547001_5722301131001_6336338048001.m3u8', 'ช่อง 3')">
+        <img src="https://cdn.brighttv.co.th/live-channel/images/3HD_256x256_03.png" alt="ช่อง 3">
+        <div class="card-title">ช่อง 3</div>
     </div>
-<?php endforeach; ?>
+    <div class="card" onclick="playVideo('https://bcovlive-a.akamaihd.net/6055106547001/6055106547001_5722301131001_6336338048001.m3u8', 'ช่อง 7')">
+        <img src="https://cdn.brighttv.co.th/live-channel/images/BBTV-7HD-logo.png" alt="ช่อง 7">
+        <div class="card-title">ช่อง 7</div>
+    </div>
+    <div class="card" onclick="playVideo('https://bcovlive-a.akamaihd.net/bc184a44f9f743dfb57423069156e525/ap-southeast-1/5938473729001/57995349e5d448699778c1dfc6e3b2e3/playlist.m3u8', 'ช่อง 5')">
+        <img src="https://cdn.brighttv.co.th/live-channel/images/TV5_256x256_03.png" alt="ช่อง 5">
+        <div class="card-title">ช่อง 5</div>
+    </div>
+    <div class="card" onclick="playVideo('https://d36f7t5w22k38j.cloudfront.net/live/thairath/playlist.m3u8', 'ไทยรัฐทีวี')">
+        <img src="https://www.thairath.co.th/media/static_content/images/live/thairathTV.png" alt="ไทยรัฐทีวี">
+        <div class="card-title">ไทยรัฐทีวี</div>
+    </div>
+    <div class="card" onclick="playVideo('https://bcovlive-a.akamaihd.net/5135293282001/5135293282001_6270634994001_1303866.m3u8', 'อมรินทร์ทีวี')">
+        <img src="https://img.thairath.co.th/media/static_content/images/live/amarintv34.png" alt="อมรินทร์ทีวี">
+        <div class="card-title">อมรินทร์ทีวี</div>
+    </div>
+    <div class="card" onclick="playVideo('https://bcovlive-a.akamaihd.net/bc184a44f9f743dfb57423069156e525/ap-southeast-1/5938473729001/57995349e5d448699778c1dfc6e3b2e3/playlist.m3u8', 'ช่อง PPTV')">
+        <img src="https://upload.wikimedia.org/wikipedia/th/4/4b/PPTv_hd36_2014.png" alt="ช่อง PPTV">
+        <div class="card-title">ช่อง PPTV</div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
-function playVideo(url) {
+function playVideo(url, title) {
     const video = document.getElementById('video');
     const videoHeading = document.getElementById('video-heading');
     const videoContainer = document.querySelector('.video-container');
 
+    // Update the heading to show the channel name
+    videoHeading.textContent = `กำลังเล่น: ${title}`;
+    
     video.style.display = 'block';
     videoHeading.style.display = 'block';
 
