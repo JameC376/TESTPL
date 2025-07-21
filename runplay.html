@@ -213,16 +213,18 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
-    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.3.11/dist/shaka-player.compiled.js"></script>
 
     <script>
         const videoElement = document.getElementById('video-player');
         const placeholderText = document.getElementById('placeholder-text');
         const channelListContainer = document.getElementById('channel-list');
-        let hlsPlayer = null;
-        let dashPlayer = null;
-        let clearKeySession = null;
+        let shakaPlayer = null;
+
+        // Helper function to convert a hex string to Base64
+        function hexToBase64(hex) {
+            return btoa(String.fromCharCode.apply(null, hex.match(/.{2}/g).map(byte => parseInt(byte, 16))));
+        }
 
         const channels = [
             {
@@ -300,61 +302,61 @@
             return item;
         }
 
-        function loadVideo(channel) {
+        async function loadVideo(channel) {
             stopCurrentPlayback();
-
-            const isHLS = channel.url.includes('.m3u8');
-            const isDASH = channel.url.includes('.mpd');
 
             placeholderText.style.display = 'none';
             videoElement.style.display = 'block';
 
-            if (isHLS && Hls.isSupported()) {
-                hlsPlayer = new Hls();
-                hlsPlayer.loadSource(channel.url);
-                hlsPlayer.attachMedia(videoElement);
-                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
-                    videoElement.play();
-                });
-            } else if (isDASH && channel.licenseKey) {
-                dashPlayer = dashjs.MediaPlayer().create();
-                dashPlayer.setProtectionData({
-                    "com.widevine.alpha": {
-                        "serverURL": null
-                    },
-                    "org.w3.clearkey": {
-                        "clearkeys": {
-                            [channel.licenseKey.split(':')[0]]: channel.licenseKey.split(':')[1]
-                        }
-                    }
-                });
-                dashPlayer.initialize(videoElement, channel.url, true);
-            } else if (isHLS || isDASH) {
-                // Fallback for browsers that support HLS/DASH natively
-                videoElement.src = channel.url;
-                videoElement.play();
-            } else {
-                placeholderText.innerText = 'ไม่สามารถเล่นวิดีโอนี้ได้';
+            // Create a new Shaka Player instance
+            shakaPlayer = new shaka.Player(videoElement);
+
+            // Add a basic error handler
+            shakaPlayer.addEventListener('error', (event) => {
+                const error = event.detail;
+                console.error('Shaka Player Error:', error);
+                placeholderText.innerText = `เกิดข้อผิดพลาดในการเล่นวิดีโอ: ${error.code} - ${error.severity}`;
                 placeholderText.style.display = 'block';
                 videoElement.style.display = 'none';
-                console.error('Unsupported video format or browser.');
+            });
+
+            try {
+                // Check if the channel has a ClearKey license
+                if (channel.licenseKey) {
+                    const [kidHex, keyHex] = channel.licenseKey.split(':');
+                    const clearKeys = {};
+                    clearKeys[hexToBase64(kidHex)] = hexToBase64(keyHex);
+                    
+                    // Configure the player to use ClearKey
+                    shakaPlayer.configure({
+                        drm: {
+                            clearKeys: clearKeys
+                        }
+                    });
+                }
+                
+                // Load the manifest (Shaka auto-detects HLS or DASH)
+                await shakaPlayer.load(channel.url);
+                console.log('Video loaded successfully!');
+
+            } catch (error) {
+                console.error('Error during video load:', error);
+                placeholderText.innerText = `ไม่สามารถเล่นวิดีโอนี้ได้: ${error.message}`;
+                placeholderText.style.display = 'block';
+                videoElement.style.display = 'none';
             }
         }
 
         function stopCurrentPlayback() {
-            if (hlsPlayer) {
-                hlsPlayer.destroy();
-                hlsPlayer = null;
+            if (shakaPlayer) {
+                shakaPlayer.destroy();
+                shakaPlayer = null;
             }
-            if (dashPlayer) {
-                dashPlayer.reset();
-                dashPlayer = null;
-            }
-            videoElement.src = '';
-            videoElement.load();
         }
 
         function initialize() {
+            shaka.polyfill.installAll();
+            
             channels.forEach((channel, index) => {
                 const item = createChannelItem(channel, index);
                 channelListContainer.appendChild(item);
