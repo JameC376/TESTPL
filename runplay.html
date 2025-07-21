@@ -1,68 +1,66 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>one31 Player</title>
-
-  <!-- Video.js CSS -->
-  <link href="https://vjs.zencdn.net/7.21.0/video-js.css" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <title>Live TV Player</title>
+  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
   <style>
     body {
-      margin: 0;
-      font-family: sans-serif;
-      background-color: #111;
+      background: #111;
       color: #fff;
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 1rem;
+      padding: 20px;
     }
 
-    .player-wrapper {
-      width: 100%;
-      max-width: 800px;
-      aspect-ratio: 16/9;
-      background: #000;
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    #channelSelector {
+      margin-bottom: 20px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
     }
 
     .video-js {
-      width: 100%;
-      height: 100%;
-    }
-
-    h2 {
-      margin-bottom: 1rem;
-      text-align: center;
+      width: 90vw;
+      max-width: 960px;
+      height: 540px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
     }
   </style>
 </head>
 <body>
-  <h2>📺 ช่อง one31 - Live</h2>
 
-  <div class="player-wrapper">
-    <video
-      id="my-video"
-      class="video-js vjs-default-skin vjs-big-play-centered"
-      controls
-      preload="auto"
-      poster="https://assets.oned.net/3/be/7e/be7edac0-e9b2-4555-b671-8104c5ba5270"
-    >
-      <source src="https://bcovlive-a.akamaihd.net/b6603a14ea59440a95e9235e14bc9332/ap-southeast-1/6415628290001/9c3d7fc7d10840a69e48b5939ae886e0/playlist_ssaiM.m3u8" type="application/x-mpegURL" />
-      <p class="vjs-no-js">กรุณาเปิด JavaScript เพื่อเล่นวิดีโอนี้</p>
-    </video>
-  </div>
+  <h1>Live TV Player</h1>
 
-  <!-- Video.js -->
-  <script src="https://vjs.zencdn.net/7.21.0/video.min.js"></script>
+  <select id="channelSelector">
+    <option value="https://pptv36-9h0yba.cdn.byteark.com/bamm-csai/playlist.m3u8?x_ark_access_id=fleet-2966&x_ark_auth_type=ark-v2&x_ark_expires=1753100402&x_ark_path_prefix=%2Fbamm-csai%2F&x_ark_signature=NZ6cTEg4BlXkVEPq0RWgBQ">📺 PPTV</option>
+    <option value="https://bcovlive-a.akamaihd.net/b6603a14ea59440a95e9235e14bc9332/ap-southeast-1/6415628290001/9c3d7fc7d10840a69e48b5939ae886e0/playlist_ssaiM.m3u8">🎬 one31</option>
+  </select>
 
-  <!-- Video.js HLS Quality Selector -->
-  <script src="https://cdn.jsdelivr.net/npm/videojs-hls-quality-selector@1.1.3/dist/videojs-hls-quality-selector.min.js"></script>
+  <video id="livePlayer" class="video-js vjs-theme-city" controls preload="auto" data-setup='{"liveui": true}'>
+    <source src="https://pptv36-9h0yba.cdn.byteark.com/bamm-csai/playlist.m3u8?x_ark_access_id=fleet-2966&x_ark_auth_type=ark-v2&x_ark_expires=1753100402&x_ark_path_prefix=%2Fbamm-csai%2F&x_ark_signature=NZ6cTEg4BlXkVEPq0RWgBQ" type="application/x-mpegURL">
+    <track kind="captions" label="Thai Sub" src="captions-th.vtt" srclang="th" default>
+    <p class="vjs-no-js">
+      ต้องใช้ JavaScript และ Browser ที่รองรับ HTML5 Video
+    </p>
+  </video>
 
+  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
   <script>
-    var player = videojs('my-video');
-    player.hlsQualitySelector({
-      displayCurrentQuality: true
+    const player = videojs('livePlayer');
+    const selector = document.getElementById('channelSelector');
+
+    selector.addEventListener('change', () => {
+      const selectedUrl = selector.value;
+      player.src({ type: 'application/x-mpegURL', src: selectedUrl });
+      player.play();
     });
   </script>
 </body>
