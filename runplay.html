@@ -1,59 +1,28 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>เล่น HLS และ MPEG-DASH</title>
-  <style>
-    video {
-      width: 640px;
-      height: 360px;
-      margin-bottom: 20px;
-    }
-  </style>
-</head>
+<head><meta charset="UTF-8"><title>USA Network HLS</title></head>
 <body>
+  <h2>USA Network (HLS)</h2>
+  <video id="video" controls width="640"></video>
 
-<h2>One31 (HLS)</h2>
-<video id="videoHLS" controls></video>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const video = document.getElementById('video');
+    const url = "https://raw.githubusercontent.com/CODERX24/tv/master/USANETWORK.m3u8";
 
-<h2>USA Network (MPEG-DASH + ClearKey DRM)</h2>
-<video id="videoMPD" controls></video>
-
-<!-- hls.js สำหรับเล่น .m3u8 -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
-<!-- dash.js สำหรับเล่น .mpd -->
-<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
-
-<script>
-  // เล่น HLS
-  var hlsVideo = document.getElementById('videoHLS');
-  var hlsUrl = "https://bcovlive-a.akamaihd.net/b6603a14ea59440a95e9235e14bc9332/ap-southeast-1/6415628290001/9c3d7fc7d10840a69e48b5939ae886e0/playlist_ssaiM.m3u8";
-
-  if (Hls.isSupported()) {
-    var hls = new Hls();
-    hls.loadSource(hlsUrl);
-    hls.attachMedia(hlsVideo);
-  } else if (hlsVideo.canPlayType('application/vnd.apple.mpegurl')) {
-    hlsVideo.src = hlsUrl;
-  }
-
-  // เล่น DASH + ClearKey DRM
-  var mpdVideo = document.getElementById('videoMPD');
-  var mpdUrl = "https://cfrt.stream.peacocktv.com/Content/CMAF_OL1-CTR-4s/Live/channel(usa-west)/master.mpd";
-
-  var player = dashjs.MediaPlayer().create();
-  player.initialize(mpdVideo, mpdUrl, true);
-
-  // ClearKey DRM
-  player.setProtectionData({
-    "org.w3.clearkey": {
-      "clearkeys": {
-        "333962e3e1383529867a9a0e28a5e5d1": "5d3fcbed53749ee622ed0e64f31c1cbf"
-      }
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function() {
+        video.play();
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url;
+      video.addEventListener('loadedmetadata', () => video.play());
+    } else {
+      console.error('HLS not supported in this browser');
     }
-  });
-</script>
-
+  </script>
 </body>
 </html>
