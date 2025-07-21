@@ -1,369 +1,59 @@
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TV Project</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #f7f7f7;
-            --secondary-color: #333;
-            --background-color: #1a1a1a;
-            --card-background: #2a2a2a;
-            --active-color: #007bff;
-            --text-color: #e0e0e0;
-            --light-text-color: #aaaaaa;
-            --border-radius: 12px;
-            --padding: 24px;
-        }
-
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        .container {
-            display: flex;
-            width: 100%;
-            height: 100vh;
-            max-width: 1600px;
-            gap: var(--padding);
-            padding: var(--padding);
-            box-sizing: border-box;
-        }
-
-        .channel-list {
-            flex-basis: 350px;
-            overflow-y: auto;
-            background-color: var(--card-background);
-            border-radius: var(--border-radius);
-            padding: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            transition: transform 0.3s ease;
-        }
-
-        .video-player-container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--card-background);
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        }
-
-        #video-container {
-            flex-grow: 1;
-            position: relative;
-            padding-top: 56.25%; /* 16:9 Aspect Ratio */
-            width: 100%;
-            border-radius: var(--border-radius) var(--border-radius) 0 0;
-            overflow: hidden;
-            background-color: #000;
-        }
-
-        #video-player {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none; /* Hide until a channel is selected */
-        }
-
-        #placeholder-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--light-text-color);
-            font-size: 1.5rem;
-            text-align: center;
-        }
-
-        h2 {
-            margin: 0 0 16px;
-            color: var(--text-color);
-            font-weight: 600;
-        }
-
-        .channel-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            background-color: #383838;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.2s;
-            text-decoration: none;
-        }
-
-        .channel-item:hover {
-            background-color: #444;
-            transform: translateY(-2px);
-        }
-
-        .channel-item.active {
-            background-color: var(--active-color);
-            color: #fff;
-        }
-        
-        .channel-item.active .channel-title,
-        .channel-item.active .channel-group {
-            color: #fff;
-        }
-
-        .channel-logo {
-            width: 50px;
-            height: 50px;
-            min-width: 50px;
-            min-height: 50px;
-            border-radius: 8px;
-            object-fit: contain;
-            margin-right: 16px;
-            background-color: #fff;
-        }
-
-        .channel-info {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            overflow: hidden;
-        }
-
-        .channel-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: var(--text-color);
-        }
-
-        .channel-group {
-            font-size: 0.9rem;
-            color: var(--light-text-color);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* Scrollbar styles */
-        .channel-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .channel-list::-webkit-scrollbar-track {
-            background: var(--card-background);
-            border-radius: 10px;
-        }
-
-        .channel-list::-webkit-scrollbar-thumb {
-            background-color: #4a4a4a;
-            border-radius: 10px;
-            border: 2px solid var(--card-background);
-        }
-
-        /* Responsive design */
-        @media (max-width: 1024px) {
-            .container {
-                flex-direction: column;
-                height: auto;
-                padding: 16px;
-                gap: 16px;
-            }
-
-            .channel-list {
-                flex-basis: auto;
-                width: 100%;
-                height: 250px;
-            }
-
-            .video-player-container {
-                width: 100%;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>เล่น HLS และ MPEG-DASH</title>
+  <style>
+    video {
+      width: 640px;
+      height: 360px;
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="channel-list" id="channel-list">
-            <h2>รายการช่อง</h2>
-            </div>
+<h2>One31 (HLS)</h2>
+<video id="videoHLS" controls></video>
 
-        <div class="video-player-container">
-            <div id="video-container">
-                <video id="video-player" controls autoplay></video>
-                <div id="placeholder-text">
-                    กรุณาเลือกช่องเพื่อเริ่มรับชม
-                </div>
-            </div>
-        </div>
-    </div>
+<h2>USA Network (MPEG-DASH + ClearKey DRM)</h2>
+<video id="videoMPD" controls></video>
 
-    <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.3.11/dist/shaka-player.compiled.js"></script>
+<!-- hls.js สำหรับเล่น .m3u8 -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-    <script>
-        const videoElement = document.getElementById('video-player');
-        const placeholderText = document.getElementById('placeholder-text');
-        const channelListContainer = document.getElementById('channel-list');
-        let shakaPlayer = null;
+<!-- dash.js สำหรับเล่น .mpd -->
+<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 
-        // Helper function to convert a hex string to Base64
-        function hexToBase64(hex) {
-            return btoa(String.fromCharCode.apply(null, hex.match(/.{2}/g).map(byte => parseInt(byte, 16))));
-        }
+<script>
+  // เล่น HLS
+  var hlsVideo = document.getElementById('videoHLS');
+  var hlsUrl = "https://bcovlive-a.akamaihd.net/b6603a14ea59440a95e9235e14bc9332/ap-southeast-1/6415628290001/9c3d7fc7d10840a69e48b5939ae886e0/playlist_ssaiM.m3u8";
 
-        const channels = [
-            {
-                name: 'one31',
-                group: 'วัน 31 บจก',
-                logo: 'https://assets.oned.net/3/be/7e/be7edac0-e9b2-4555-b671-8104c5ba5270',
-                url: 'https://bcovlive-a.akamaihd.net/b6603a14ea59440a95e9235e14bc9332/ap-southeast-1/6415628290001/9c3d7fc7d10840a69e48b5939ae886e0/playlist_ssaiM.m3u8'
-            },
-            {
-                name: 'GMM25',
-                group: 'วัน 31 บจก',
-                logo: 'https://assets.oned.net/3/89/9d/899d04ae-354c-4add-a781-2a52ea61ac38',
-                url: 'https://bcovlive-a.akamaihd.net/57d4bf695e80436d9335f4f50adbe438/ap-southeast-1/6415628290001/7e85dc4a59904e45b4fdffebd62e1d82/playlist_ssaiM.m3u8'
-            },
-            {
-                name: 'MCOTHD 30',
-                group: 'บริษัท อสมท จำกัด(มหาชน)',
-                logo: 'https://imgs.mcot.net/images/2020/04/1586506833486-0x92.png',
-                url: 'https://mcothd-streaming-edge-cdn.mcot.net/tencentmcot/smil:tencentmcot.smil/chunklist_w1497173433_b3000000.m3u8'
-            },
-            {
-                name: 'TNT Sports 1',
-                group: 'Warner Bros. Discovery',
-                logo: 'https://i.ibb.co.com/wrhHd3H/tntsports1.jpg',
-                url: 'https://a39aivottlinear-a.akamaihd.net/OTTB/lhr-nitro/live/clients/dash/enc/wf8usag51e/out/v1/bd3b0c314fff4bb1ab4693358f3cd2d3/cenc.mpd?encoding=segmentBase',
-                licenseKey: 'ae26845bd33038a9c0774a0981007294:63ac662dde310cfb4cc6f9b43b34196d'
-            },
-            {
-                name: 'TNT Sports 2',
-                group: 'Warner Bros. Discovery',
-                logo: 'https://i.ibb.co.com/zmrtkTK/tntsports2.jpg',
-                url: 'https://a39aivottlinear-a.akamaihd.net/OTTB/lhr-nitro/live/clients/dash/enc/f0qvkrra8j/out/v1/f8fa17f087564f51aa4d5c700be43ec4/cenc.mpd?encoding=segmentBase',
-                licenseKey: '6d1708b185c6c4d7b37600520c7cc93c:1aace05f58d8edef9697fd52cb09f441'
-            },
-            {
-                name: 'TNT Sports 3',
-                group: 'Warner Bros. Discovery',
-                logo: 'https://i.ibb.co.com/xCZT9xz/tntsports3.jpg',
-                url: 'https://a39aivottlinear-a.akamaihd.net/OTTB/lhr-nitro/live/clients/dash/enc/lsdasbvglv/out/v1/bb548a3626cd4708afbb94a58d71dce9/cenc.mpd?encoding=segmentBase',
-                licenseKey: '4e993aa8c1f295f8b94e8e9e6f6d0bfe:86a1ed6e96caab8eb1009fe530d2cf4f'
-            },
-            {
-                name: 'TNT Sports 4',
-                group: 'Warner Bros. Discovery',
-                logo: 'https://i.ibb.co.com/mFZwwBN/tntsports4.jpg',
-                url: 'https://a39aivottlinear-a.akamaihd.net/OTTB/lhr-nitro/live/clients/dash/enc/i2pcjr4pe5/out/v1/912e9db56d75403b8a9ac0a719110f36/cenc.mpd?encoding=segmentBase',
-                licenseKey: 'e31a5a81caff5d07ea2411a571fc2e59:96c5ef69479732ae734f962748c19729'
-            }
-        ];
+  if (Hls.isSupported()) {
+    var hls = new Hls();
+    hls.loadSource(hlsUrl);
+    hls.attachMedia(hlsVideo);
+  } else if (hlsVideo.canPlayType('application/vnd.apple.mpegurl')) {
+    hlsVideo.src = hlsUrl;
+  }
 
-        function createChannelItem(channel, index) {
-            const item = document.createElement('a');
-            item.href = '#';
-            item.className = 'channel-item';
-            item.dataset.index = index;
+  // เล่น DASH + ClearKey DRM
+  var mpdVideo = document.getElementById('videoMPD');
+  var mpdUrl = "https://cfrt.stream.peacocktv.com/Content/CMAF_OL1-CTR-4s/Live/channel(usa-west)/master.mpd";
 
-            item.innerHTML = `
-                <img class="channel-logo" src="${channel.logo}" alt="${channel.name} logo">
-                <div class="channel-info">
-                    <span class="channel-title">${channel.name}</span>
-                    <span class="channel-group">${channel.group}</span>
-                </div>
-            `;
+  var player = dashjs.MediaPlayer().create();
+  player.initialize(mpdVideo, mpdUrl, true);
 
-            item.addEventListener('click', (event) => {
-                event.preventDefault();
-                loadVideo(channel, index);
-                const currentActive = document.querySelector('.channel-item.active');
-                if (currentActive) {
-                    currentActive.classList.remove('active');
-                }
-                item.classList.add('active');
-            });
+  // ClearKey DRM
+  player.setProtectionData({
+    "org.w3.clearkey": {
+      "clearkeys": {
+        "333962e3e1383529867a9a0e28a5e5d1": "5d3fcbed53749ee622ed0e64f31c1cbf"
+      }
+    }
+  });
+</script>
 
-            return item;
-        }
-
-        async function loadVideo(channel) {
-            stopCurrentPlayback();
-
-            placeholderText.style.display = 'none';
-            videoElement.style.display = 'block';
-
-            // Create a new Shaka Player instance
-            shakaPlayer = new shaka.Player(videoElement);
-
-            // Add a basic error handler
-            shakaPlayer.addEventListener('error', (event) => {
-                const error = event.detail;
-                console.error('Shaka Player Error:', error);
-                placeholderText.innerText = `เกิดข้อผิดพลาดในการเล่นวิดีโอ: ${error.code} - ${error.severity}`;
-                placeholderText.style.display = 'block';
-                videoElement.style.display = 'none';
-            });
-
-            try {
-                // Check if the channel has a ClearKey license
-                if (channel.licenseKey) {
-                    const [kidHex, keyHex] = channel.licenseKey.split(':');
-                    const clearKeys = {};
-                    clearKeys[hexToBase64(kidHex)] = hexToBase64(keyHex);
-                    
-                    // Configure the player to use ClearKey
-                    shakaPlayer.configure({
-                        drm: {
-                            clearKeys: clearKeys
-                        }
-                    });
-                }
-                
-                // Load the manifest (Shaka auto-detects HLS or DASH)
-                await shakaPlayer.load(channel.url);
-                console.log('Video loaded successfully!');
-
-            } catch (error) {
-                console.error('Error during video load:', error);
-                placeholderText.innerText = `ไม่สามารถเล่นวิดีโอนี้ได้: ${error.message}`;
-                placeholderText.style.display = 'block';
-                videoElement.style.display = 'none';
-            }
-        }
-
-        function stopCurrentPlayback() {
-            if (shakaPlayer) {
-                shakaPlayer.destroy();
-                shakaPlayer = null;
-            }
-        }
-
-        function initialize() {
-            shaka.polyfill.installAll();
-            
-            channels.forEach((channel, index) => {
-                const item = createChannelItem(channel, index);
-                channelListContainer.appendChild(item);
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', initialize);
-    </script>
 </body>
 </html>
