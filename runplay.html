@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>HLS Stream Selector</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HLS Stream Grid</title>
 
   <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+
   <!-- Video.js CSS -->
-  <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet"/>
+  <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
 
   <style>
     :root {
@@ -17,34 +18,39 @@
       --accent: #ff4081;
       --text: #e0e0e0;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      height: 100%; width: 100%;
-      background: var(--bg);
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
       font-family: 'Inter', sans-serif;
+      background: var(--bg);
       color: var(--text);
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
       align-items: center;
+      padding: 1rem;
     }
 
-    #menu-container {
-      width: 100%; max-width: 960px;
-      margin: 1.5rem 1rem 0;
-      text-align: center;
-    }
-    #menu-container h2 {
-      font-size: 1.5rem; font-weight: 600;
-      color: var(--accent); margin-bottom: .75rem;
+    h1 {
+      margin-bottom: 1rem;
+      color: var(--accent);
+      font-weight: 600;
     }
 
-    /* grid เมนู */
-    #stream-menu {
+    /* Grid เมนูสตรีม */
+    #grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 1rem;
-      width: 100%; max-width: 960px;
-      margin-bottom: 1.5rem;
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 2rem;
     }
+
     .card {
       background: var(--card-bg);
       border-radius: 8px;
@@ -53,125 +59,149 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.6);
       transition: transform .2s, box-shadow .2s;
     }
+
     .card:hover {
       transform: translateY(-4px);
       box-shadow: 0 8px 24px rgba(0,0,0,0.8);
     }
+
     .card img {
-      width: 100%; height: 90px; object-fit: cover;
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
       display: block;
     }
-    .card .info {
-      padding: .5rem;
+
+    .info {
+      padding: .75rem;
     }
-    .card .info h3 {
-      font-size: 1rem; margin-bottom: .25rem;
-      color: var(--accent); font-weight: 600;
+
+    .info h3 {
+      font-size: 1rem;
+      color: var(--accent);
+      margin-bottom: .5rem;
+      font-weight: 600;
     }
-    .card .info time {
-      font-size: .85rem; color: #ccc;
+
+    .info time {
+      font-size: .85rem;
+      color: #aaa;
     }
 
     /* Video.js player */
     .video-js {
-      width: 100%; max-width: 960px;
+      width: 100%;
+      max-width: 1000px;
       margin-bottom: 2rem;
       box-shadow: 0 6px 20px rgba(0,0,0,0.6);
       border-radius: 8px;
       overflow: hidden;
     }
-    .vjs-control-bar { background: rgba(0,0,0,0.7); }
-    .video-js .vjs-big-play-button {
-      background: var(--accent); border: none;
+
+    .vjs-control-bar {
+      background: rgba(0,0,0,0.7);
+    }
+
+    .vjs-big-play-button {
+      background: var(--accent);
+      border: none;
     }
   </style>
 </head>
 <body>
 
-  <div id="menu-container">
-    <h2>เลือกช่องสตรีม</h2>
-  </div>
-  <div id="stream-menu">
-    <!-- การ์ดสตรีมจะถูกใส่ที่นี่ -->
+  <h1>เลือกช่องสตรีม</h1>
+  <div id="grid">
+    <!-- การ์ดสตรีมจะถูกเติมด้วย JavaScript -->
   </div>
 
   <video
-    id="hls-player"
+    id="player"
     class="video-js vjs-default-skin vjs-fluid"
-    controls autoplay muted preload="auto"
+    controls
+    autoplay
+    muted
+    preload="auto"
   ></video>
 
   <!-- Video.js -->
   <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+
   <script>
   (async () => {
-    const menuGrid = document.getElementById('stream-menu');
-    const player = videojs('hls-player', { fluid: true });
-    try {
-      // ถ้าถูกบล็อคให้ใช้ proxy ของคุณเอง
-      const raw = await fetch(
-        'https://cors-anywhere.herokuapp.com/https://halu.serv00.net/poli.php'
-      ).then(r => r.text());
+    const grid = document.getElementById('grid');
+    const player = videojs('player', { fluid: true });
+    const proxy = 'https://cors-anywhere.herokuapp.com/';
+    const targetURL = 'https://halu.serv00.net/poli.php';
 
+    try {
+      // ดึง HTML หน้าเป้าหมาย (ผ่าน proxy ถ้าจำเป็น)
+      const raw = await fetch(proxy + targetURL).then(r => r.text());
       const doc = new DOMParser().parseFromString(raw, 'text/html');
 
-      // เก็บ .m3u8
-      const srcEls = doc.querySelectorAll('video source[type="application/x-mpegURL"]');
-      // เก็บรูป–ชื่อ–เวลา (ปรับ selector ให้ตรงกับโครงสร้างจริง)
-      const imgEls  = doc.querySelectorAll('.item img, img');
-      const titleEls = doc.querySelectorAll('.item h3, .item h4, a.title, a');
-      const timeEls = doc.querySelectorAll('.item time, .item .time, span.date, span.time');
+      // ปรับ selector ให้ตรงกับโครงสร้างของ poli.php
+      // ในตัวอย่างนี้สมมติมี <div class="item"> แต่ให้ปรับตามของจริง
+      const items = doc.querySelectorAll('.item');
 
-      const streams = [];
-      srcEls.forEach((el, i) => {
-        let url = el.src.trim();
-        if (!url) return;
-        if (!url.startsWith('http')) {
-          url = new URL(url, 'https://halu.serv00.net').href;
-        }
-
-        const imgSrc = imgEls[i]?.src
-          ? (imgEls[i].src.startsWith('http')
-              ? imgEls[i].src
-              : new URL(imgEls[i].src, 'https://halu.serv00.net').href)
-          : '';
-
-        const title = titleEls[i]?.textContent.trim() || `Stream ${i+1}`;
-        const times = timeEls[i]?.textContent.trim() || '';
-
-        streams.push({ url, img: imgSrc, title, times });
-      });
-
-      if (!streams.length) {
-        throw new Error('ไม่พบสตรีม .m3u8 ใดๆ');
+      if (!items.length) {
+        throw new Error('ไม่พบองค์ประกอบ .item ในหน้า poli.php');
       }
 
       // สร้างการ์ดแต่ละสตรีม
-      streams.forEach(({url, img, title, times}) => {
+      items.forEach(el => {
+        // 1. รูปภาพ
+        let img = el.querySelector('img')?.getAttribute('src') || '';
+        if (img && !img.startsWith('http')) {
+          img = new URL(img, targetURL).href;
+        }
+
+        // 2. ชื่อเรื่อง
+        const title = el.querySelector('h3, h4, .title')?.textContent.trim()
+                      || el.querySelector('a')?.textContent.trim() 
+                      || 'ไม่มีชื่อเรื่อง';
+
+        // 3. เวลา
+        const times = el.querySelector('time, .time, span.date')?.textContent.trim()
+                      || '';
+
+        // 4. ลิงก์ .m3u8 หรือ iframe
+        let stream = el.querySelector('source[type="application/x-mpegURL"]')?.getAttribute('src')
+                   || el.querySelector('iframe')?.getAttribute('src')
+                   || '';
+        if (stream && !stream.startsWith('http')) {
+          stream = new URL(stream, targetURL).href;
+        }
+
+        // ข้ามรายการถ้าไม่มี stream
+        if (!stream) return;
+
+        // สร้างการ์ด
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-          <img src="${img}" alt="${title}"/>
+          <img src="${img}" alt="${title}" />
           <div class="info">
             <h3>${title}</h3>
             <time>${times}</time>
           </div>`;
-        menuGrid.appendChild(card);
+        grid.appendChild(card);
 
+        // เมื่อคลิก เลือกสตรีมนั้นมาเล่น
         card.addEventListener('click', () => {
           player.pause();
-          player.src({ src: url, type: 'application/x-mpegURL' });
+          player.src({ src: stream, type: 'application/x-mpegURL' });
           player.play();
         });
       });
 
       // เล่นการ์ดแรกอัตโนมัติ
-      menuGrid.firstElementChild.click();
+      grid.firstElementChild?.click();
 
     } catch (err) {
       console.error(err);
-      document.getElementById('menu-container').innerHTML =
-        `<p style="color:#ff6b6b;">เกิดข้อผิดพลาด: ${err.message}</p>`;
+      grid.innerHTML = `<p style="color:#ff6b6b; text-align:center;">
+        เกิดข้อผิดพลาด: ${err.message}
+      </p>`;
     }
   })();
   </script>
