@@ -3,205 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HLS Stream Grid</title>
+  <title>Volleyball World HLS Player</title>
 
   <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
 
-  <!-- Video.js CSS -->
-  <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+  <!-- HLS.js -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
   <style>
     :root {
-      --bg: #121212;
-      --card-bg: #1f1f1f;
-      --accent: #ff4081;
-      --text: #e0e0e0;
+      --bg: #0d1117;
+      --card: #161b22;
+      --accent: #58a6ff;
+      --text: #c9d1d9;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%; font-family: 'Inter', sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       padding: 1rem;
     }
-
     h1 {
-      margin-bottom: 1rem;
-      color: var(--accent);
-      font-weight: 600;
+      color: var(--accent); margin-bottom: 1rem;
     }
-
-    /* Grid เมนูสตรีม */
-    #grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-      width: 100%;
-      max-width: 1000px;
-      margin-bottom: 2rem;
+    #player { 
+      width: 100%; max-width: 800px;
+      border-radius: 8px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      background: #000;
     }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: 8px;
-      overflow: hidden;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-      transition: transform .2s, box-shadow .2s;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
-    }
-
-    .card img {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
+    video {
+      width: 100%; height: auto;
       display: block;
     }
-
-    .info {
-      padding: .75rem;
-    }
-
-    .info h3 {
-      font-size: 1rem;
-      color: var(--accent);
-      margin-bottom: .5rem;
-      font-weight: 600;
-    }
-
-    .info time {
-      font-size: .85rem;
-      color: #aaa;
-    }
-
-    /* Video.js player */
-    .video-js {
-      width: 100%;
-      max-width: 1000px;
-      margin-bottom: 2rem;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .vjs-control-bar {
-      background: rgba(0,0,0,0.7);
-    }
-
-    .vjs-big-play-button {
-      background: var(--accent);
-      border: none;
+    #error {
+      margin-top: 1rem; color: #f85149;
     }
   </style>
 </head>
 <body>
 
-  <h1>เลือกช่องสตรีม</h1>
-  <div id="grid">
-    <!-- การ์ดสตรีมจะถูกเติมด้วย JavaScript -->
+  <h1>Volleyball World Live Stream</h1>
+  <div id="player">
+    <video id="video" controls autoplay muted></video>
   </div>
-
-  <video
-    id="player"
-    class="video-js vjs-default-skin vjs-fluid"
-    controls
-    autoplay
-    muted
-    preload="auto"
-  ></video>
-
-  <!-- Video.js -->
-  <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+  <div id="error"></div>
 
   <script>
   (async () => {
-    const grid = document.getElementById('grid');
-    const player = videojs('player', { fluid: true });
-    const proxy = 'https://cors-anywhere.herokuapp.com/';
-    const targetURL = 'https://halu.serv00.net/poli.php';
+    const video = document.getElementById('video');
+    const errorBox = document.getElementById('error');
+    const target = 'https://kalanchoe.micinproject.de/volleyballworld/idx-eMqXVhhW/pages';
+    const proxy  = 'https://cors-anywhere.herokuapp.com/';
 
     try {
       // ดึง HTML หน้าเป้าหมาย (ผ่าน proxy ถ้าจำเป็น)
-      const raw = await fetch(proxy + targetURL).then(r => r.text());
-      const doc = new DOMParser().parseFromString(raw, 'text/html');
+      const html = await fetch(proxy + target).then(r => r.text());
+      const doc  = new DOMParser().parseFromString(html, 'text/html');
 
-      // ปรับ selector ให้ตรงกับโครงสร้างของ poli.php
-      // ในตัวอย่างนี้สมมติมี <div class="item"> แต่ให้ปรับตามของจริง
-      const items = doc.querySelectorAll('.item');
+      // หา <source type="application/x-mpegURL">
+      let src = doc.querySelector('source[type="application/x-mpegURL"]')?.src
+             || doc.querySelector('video[src$=".m3u8"]')?.src
+             || '';
 
-      if (!items.length) {
-        throw new Error('ไม่พบองค์ประกอบ .item ในหน้า poli.php');
+      if (!src) throw new Error('ไม่พบลิงก์ .m3u8');
+
+      // ถ้าเป็น relative path
+      if (!src.startsWith('http')) {
+        src = new URL(src, target).href;
       }
 
-      // สร้างการ์ดแต่ละสตรีม
-      items.forEach(el => {
-        // 1. รูปภาพ
-        let img = el.querySelector('img')?.getAttribute('src') || '';
-        if (img && !img.startsWith('http')) {
-          img = new URL(img, targetURL).href;
-        }
-
-        // 2. ชื่อเรื่อง
-        const title = el.querySelector('h3, h4, .title')?.textContent.trim()
-                      || el.querySelector('a')?.textContent.trim() 
-                      || 'ไม่มีชื่อเรื่อง';
-
-        // 3. เวลา
-        const times = el.querySelector('time, .time, span.date')?.textContent.trim()
-                      || '';
-
-        // 4. ลิงก์ .m3u8 หรือ iframe
-        let stream = el.querySelector('source[type="application/x-mpegURL"]')?.getAttribute('src')
-                   || el.querySelector('iframe')?.getAttribute('src')
-                   || '';
-        if (stream && !stream.startsWith('http')) {
-          stream = new URL(stream, targetURL).href;
-        }
-
-        // ข้ามรายการถ้าไม่มี stream
-        if (!stream) return;
-
-        // สร้างการ์ด
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <img src="${img}" alt="${title}" />
-          <div class="info">
-            <h3>${title}</h3>
-            <time>${times}</time>
-          </div>`;
-        grid.appendChild(card);
-
-        // เมื่อคลิก เลือกสตรีมนั้นมาเล่น
-        card.addEventListener('click', () => {
-          player.pause();
-          player.src({ src: stream, type: 'application/x-mpegURL' });
-          player.play();
-        });
-      });
-
-      // เล่นการ์ดแรกอัตโนมัติ
-      grid.firstElementChild?.click();
-
+      // เล่นด้วย HLS.js (for non–Safari browsers)
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(src);
+        hls.attachMedia(video);
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = src;
+      } else {
+        throw new Error('Browser ไม่รองรับ HLS');
+      }
     } catch (err) {
       console.error(err);
-      grid.innerHTML = `<p style="color:#ff6b6b; text-align:center;">
-        เกิดข้อผิดพลาด: ${err.message}
-      </p>`;
+      errorBox.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
     }
   })();
   </script>
