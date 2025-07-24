@@ -1,106 +1,117 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>Live TV Player - ความชัดเลือกได้</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auto HLS Player</title>
 
   <!-- Video.js CSS -->
-  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  <link
+    href="https://vjs.zencdn.net/7.20.3/video-js.css"
+    rel="stylesheet"
+  />
 
-  <!-- Custom CSS -->
   <style>
-    body {
-      background: #121212;
-      color: #ffffff;
-      font-family: 'Segoe UI', sans-serif;
+    /* เต็มจอทั้งแนวตั้ง-แนวนอน */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #000;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      padding: 20px;
+      justify-content: center;
     }
 
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    #channelSelector {
-      margin-bottom: 20px;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      background: #222;
-      color: #fff;
-      border: 1px solid #555;
-    }
-
+    /* ให้ Video.js วางตัวแบบ fluid */
     .video-js {
-      width: 90vw;
-      max-width: 960px;
-      height: 540px;
-      border-radius: 12px;
-      box-shadow: 0 0 16px rgba(255, 255, 255, 0.15);
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* โครงร่างสวยงามเล็กน้อย */
+    .vjs-default-skin .vjs-control-bar {
+      background: rgba(0, 0, 0, 0.6);
     }
   </style>
 </head>
 <body>
 
-  <h1>Live TV Player</h1>
-
-  <!-- ช่องให้เลือก -->
-  <select id="channelSelector">
-    <option value="https://pptv36-9h0yba.cdn.byteark.com/bamm-csai/playlist.m3u8?x_ark_access_id=fleet-2966&x_ark_auth_type=ark-v2&x_ark_expires=1753100402&x_ark_path_prefix=%2Fbamm-csai%2F&x_ark_signature=NZ6cTEg4BlXkVEPq0RWgBQ">📺 PPTV</option>
-    <option value="https://bcovlive-a.akamaihd.net/b6603a14ea59440a95e9235e14bc9332/ap-southeast-1/6415628290001/9c3d7fc7d10840a69e48b5939ae886e0/playlist_ssaiM.m3u8">🎬 One31</option>
-  </select>
-
-  <!-- Video Player -->
+  <!-- Video.js element -->
   <video
-    id="livePlayer"
-    class="video-js vjs-theme-city vjs-default-skin"
+    id="hls-player"
+    class="video-js vjs-default-skin vjs-fluid"
     controls
+    autoplay
+    muted
     preload="auto"
-    data-setup='{"liveui": true}'
-  >
-    <source
-      src="https://pptv36-9h0yba.cdn.byteark.com/bamm-csai/playlist.m3u8?x_ark_access_id=fleet-2966&x_ark_auth_type=ark-v2&x_ark_expires=1753100402&x_ark_path_prefix=%2Fbamm-csai%2F&x_ark_signature=NZ6cTEg4BlXkVEPq0RWgBQ"
-      type="application/x-mpegURL"
-    />
-  </video>
+  ></video>
 
-  <!-- Video.js JS -->
-  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+  <!-- Video.js + HLS -->
+  <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
 
-  <!-- Plugin: Resolution Selector -->
-  <script src="https://unpkg.com/videojs-http-source-selector/dist/videojs-http-source-selector.min.js"></script>
-
-  <!-- Script สำหรับเรียกใช้งาน -->
   <script>
-    const player = videojs('livePlayer', {
-      controlBar: {
-        children: [
-          'playToggle',
-          'volumePanel',
-          'currentTimeDisplay',
-          'progressControl',
-          'durationDisplay',
-          'remainingTimeDisplay',
-          'settingsMenuButton',
-          'fullscreenToggle'
-        ]
+    (async function() {
+      try {
+        // ดึง HTML หน้าเป้าหมาย
+        const raw = await fetch(
+          'https://cors-anywhere.herokuapp.com/https://halu.serv00.net/poli.php'
+        ).then(res => res.text());
+
+        // แปลงเป็น DOM เพื่อค้นหา .m3u8
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(raw, 'text/html');
+        let src = '';
+
+        // ลองหา <source> แบบ HLS หรือ <iframe>
+        const videoSrc = doc.querySelector(
+          'video source[type="application/x-mpegURL"]'
+        );
+        const iframeSrc = doc.querySelector('iframe');
+
+        if (videoSrc) {
+          src = videoSrc.src;
+        } else if (iframeSrc) {
+          src = iframeSrc.src;
+        }
+
+        if (!src) {
+          throw new Error('ไม่พบลิงก์ .m3u8 ในหน้าเป้าหมาย');
+        }
+
+        // จัดการกรณีเป็น URL relative
+        const streamUrl = src.startsWith('http')
+          ? src
+          : new URL(src, 'https://halu.serv00.net').href;
+
+        // สร้าง Video.js player และตั้งค่า HLS
+        const player = videojs('hls-player', {
+          fluid: true,
+          autoplay: true,
+          controls: true,
+          preload: 'auto',
+          sources: [
+            {
+              src: streamUrl,
+              type: 'application/x-mpegURL'
+            }
+          ]
+        });
+
+        // ใส่ event log (อ้างอิงเพิ่มเติมได้)
+        player.on('error', () => {
+          console.error('Video.js error:', player.error());
+        });
+
+      } catch (err) {
+        console.error(err);
+        document.body.innerHTML = 
+          '<p style="color:#fff; text-align:center;">เกิดข้อผิดพลาด: ' +
+          err.message +
+          '</p>';
       }
-    });
-
-    // เปิดใช้ปลั๊กอิน resolution selector
-    player.httpSourceSelector({
-      default: 'auto'
-    });
-
-    // เปลี่ยนช่อง
-    document.getElementById('channelSelector').addEventListener('change', function () {
-      const newUrl = this.value;
-      player.src({ type: 'application/x-mpegURL', src: newUrl });
-      player.play();
-    });
+    })();
   </script>
-
 </body>
 </html>
